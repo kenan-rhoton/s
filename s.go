@@ -1,6 +1,7 @@
 package main
 
 import (
+	"fmt"
 	"os"
 )
 
@@ -38,9 +39,10 @@ func main() {
 			fmt.Println("Error occurred while generating key: ", err.Error())
 			break
 		}
-		err := SaveAs(key, "_privkey")
+		err = SaveAs(key, "_privkey")
 		if err != nil {
 			fmt.Println("Error occurred while saving key: ", err.Error())
 		}
+		fmt.Println("Private Key successfully generated")
 	}
 }
