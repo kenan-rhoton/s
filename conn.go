@@ -3,43 +3,95 @@ package main
 import (
 	"encoding/gob"
 	"net"
+	"time"
 )
 
 type simpleMessage struct {
-	Message string
+	Message    string
+	Action     string
+	Arguments  []string
+	connHandle net.Conn
 }
 
-func handleServeConnection(c net.Conn, out chan string) {
+var serverhandlekiller = make(chan bool)
+
+func (s *simpleMessage) FullAnswer(msg, action string, args ...string) {
+	go func() {
+		s.connHandle.SetDeadline(time.Now().Add(1000 * time.Millisecond))
+		gobber := gob.NewEncoder(s.connHandle)
+		send := &simpleMessage{Message: msg, Action: action, Arguments: args}
+		gobber.Encode(send)
+	}()
+}
+func (s *simpleMessage) Answer(msg string) {
+	s.FullAnswer(msg, "")
+}
+
+func (s *simpleMessage) Close() {
+	s.connHandle.Close()
+}
+
+func handleServeConnection(c net.Conn, out chan simpleMessage) {
 	gobber := gob.NewDecoder(c)
 	res := &simpleMessage{}
 	gobber.Decode(res)
-	out <- res.Message
+	res.connHandle = c
+	out <- *res
 }
 
-func Serve(out chan string) {
-	ln, err := net.Listen("tcp", ":8090")
-	if err != nil {
-		return
-	}
-	for {
-		conn, err := ln.Accept()
+func Serve(address string) chan simpleMessage {
+	c := make(chan simpleMessage)
+	go func(out chan simpleMessage) {
+		tcp, err := net.ResolveTCPAddr("tcp", address)
 		if err != nil {
-			continue
+			return
 		}
-		go handleServeConnection(conn, out)
-	}
+		ln, err := net.ListenTCP("tcp", tcp)
+		if err != nil {
+			return
+		}
+		for {
+			select {
+			case _ = <-serverhandlekiller:
+				ln.Close()
+				return
+			default:
+			}
+			ln.SetDeadline(time.Now().Add(10 * time.Millisecond))
+			conn, err := ln.Accept()
+			if err != nil {
+				continue
+			}
+			go handleServeConnection(conn, out)
+		}
+	}(c)
+
+	return c
 }
 
-func Send(target, msg string) {
-	conn, err := net.Dial("tcp", target+":8090")
+func KillServer() {
+	serverhandlekiller <- true
+}
+
+func SendText(target, msg string) chan simpleMessage {
+	return SendAction(target, "", msg)
+}
+
+func SendAction(target, action, msg string, args ...string) chan simpleMessage {
+	handler := make(chan simpleMessage)
+	conn, err := net.Dial("tcp", target)
 	if err != nil {
-		return
+		return nil
 	}
-	m := &simpleMessage{Message: msg}
+	m := &simpleMessage{Message: msg, Action: action, Arguments: args}
 	gobber := gob.NewEncoder(conn)
 	gobber.Encode(m)
-	//writer := bufio.NewWriter(conn)
-	//writer.WriteString(msg)
-	//writer.Flush()
-	conn.Close()
+	gobbler := gob.NewDecoder(conn)
+	go func() {
+		conn.SetDeadline(time.Now().Add(10000 * time.Millisecond))
+		resp := &simpleMessage{}
+		gobbler.Decode(resp)
+		handler <- *resp
+	}()
+	return handler
 }

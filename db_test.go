@@ -14,6 +14,26 @@ type testMessage struct {
 	message []byte
 }
 
+func TestUpdateUser(t *testing.T) {
+	db, err := UseDatabase("test")
+	if err != nil {
+		t.Errorf(err.Error())
+	}
+	defer db.Close()
+	err = db.Reset()
+	if err != nil {
+		t.Errorf(err.Error())
+	}
+	err = db.SaveID("bo", []byte("?"))
+	if err != nil {
+		t.Errorf(err.Error())
+	}
+	err = db.SaveID("bo", []byte("!"))
+	if err != nil {
+		t.Errorf(err.Error())
+	}
+}
+
 func TestSaveIdentity(t *testing.T) {
 	db, err := UseDatabase("test")
 	if err != nil {
