@@ -1,8 +1,3 @@
 main:
     build: .
     restart: always
-    links:
-        - mysql
-mysql:
-    image: mysql:8
-    restart: always
