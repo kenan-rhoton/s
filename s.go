@@ -1,11 +1,20 @@
 package main
 
 import (
+	"crypto/rsa"
 	"fmt"
 	"os"
 )
 
+var config struct {
+	Target string
+	ID     string
+	Key    *rsa.PrivateKey
+}
+
 func main() {
+
+	LoadFrom(&config, "_config")
 
 	// Switch for different actions
 	switch {
@@ -31,17 +40,29 @@ func main() {
 
 	case os.Args[1] == "sel":
 		// Select: Choose a server [file] - 3
-
+		if len(os.Args) < 3 {
+			fmt.Println("sel <ipaddress>")
+			break
+		}
+		config.Target = os.Args[2]
+		err := SaveAs(&config, "_config")
+		if err != nil {
+			fmt.Println("Error occurred while saving config: ", err.Error())
+			break
+		}
+		fmt.Println("Selected new server: ", os.Args[2])
 	case os.Args[1] == "gen":
 		// Generate: generate a key [crypt, file] - 2
-		key, err := GenerateKey(4096)
+		var err error
+		config.Key, err = GenerateKey(4096)
 		if err != nil {
 			fmt.Println("Error occurred while generating key: ", err.Error())
 			break
 		}
-		err = SaveAs(key, "_privkey")
+		err = SaveAs(&config, "_config")
 		if err != nil {
 			fmt.Println("Error occurred while saving key: ", err.Error())
+			break
 		}
 		fmt.Println("Private Key successfully generated")
 	}
