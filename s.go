@@ -32,5 +32,15 @@ func main() {
 		// Select: Choose a server [file] - 3
 
 	case os.Args[1] == "gen":
+		// Generate: generate a key [crypt, file] - 2
+		key, err := GenerateKey(4096)
+		if err != nil {
+			fmt.Println("Error occurred while generating key: ", err.Error())
+			break
+		}
+		err := SaveAs(key, "_privkey")
+		if err != nil {
+			fmt.Println("Error occurred while saving key: ", err.Error())
+		}
 	}
 }
