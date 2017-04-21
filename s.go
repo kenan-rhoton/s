@@ -4,6 +4,7 @@ import (
 	"crypto/rsa"
 	"fmt"
 	"os"
+	"time"
 )
 
 var config struct {
@@ -24,7 +25,22 @@ func main() {
 
 	case os.Args[1] == "reg":
 		// Register: Send your publickey to the server and request a username [comm, crypt, db] - 4
+		if config.Target == "" {
+			fmt.Println("first <sel> a server")
+			break
+		}
+		if len(os.Args) < 3 {
+			fmt.Println("reg <alias>")
+			break
+		}
 
+		respHandle := SendAction(config.Target, "reg", Serialize(config.Key.PublicKey))
+		select {
+		case <-time.After(time.Second * 10):
+			fmt.Println("Server did not respond")
+		case answer := <-respHandle:
+			fmt.Println(answer.Action, answer.Message)
+		}
 	case os.Args[1] == "add":
 		// Add: Get a registered user's publickey to speed up stuff and or whatever [comm, file]
 
