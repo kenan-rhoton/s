@@ -9,9 +9,12 @@ type testdatatype struct {
 	A string
 	B rune
 	C int
-	D struct {
-		Boo bool
-		In  int
+	D *struct {
+		Boo  bool
+		In   int
+		Nest struct {
+			One int
+		}
 	}
 	E []string
 }
@@ -27,6 +30,7 @@ func TestDataSaveLoadExistent(t *testing.T) {
 	c, _ := os.Create("testdata.tmp")
 	c.Close()
 	DataSaveLoadAnything(t)
+	DataSaveLoadAnything(t)
 	os.Remove("testdata.tmp")
 }
 
@@ -36,10 +40,13 @@ func DataSaveLoadAnything(t *testing.T) {
 		"more than a fish!",
 		'€',
 		19283791,
-		struct {
-			Boo bool
-			In  int
-		}{Boo: false, In: 42},
+		&struct {
+			Boo  bool
+			In   int
+			Nest struct {
+				One int
+			}
+		}{Boo: false, In: 42, Nest: struct{ One int }{1}},
 		[]string{
 			"lol",
 			"rofl",
@@ -63,7 +70,7 @@ func DataSaveLoadAnything(t *testing.T) {
 		t.Errorf("Wrong rune")
 	case res.C != testdata.C:
 		t.Errorf("Wrong int")
-	case res.D.Boo != testdata.D.Boo || res.D.In != testdata.D.In:
+	case res.D.Boo != testdata.D.Boo || res.D.In != testdata.D.In || res.D.Nest.One != testdata.D.Nest.One:
 		t.Errorf("Wrong struct")
 	default:
 		for i, _ := range testdata.E {

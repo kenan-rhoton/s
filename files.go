@@ -6,16 +6,16 @@ import (
 )
 
 func SaveAs(data interface{}, filename string) error {
-	file, err := os.Open(filename)
+	file, err := os.Create(filename)
 	if err != nil {
-		file, err = os.Create(filename)
-		if err != nil {
-			return err
-		}
+		return err
 	}
 	defer file.Close()
 	gobber := gob.NewEncoder(file)
-	gobber.Encode(data)
+	err = gobber.Encode(data)
+	if err != nil {
+		return err
+	}
 	return nil
 }
 
@@ -26,6 +26,9 @@ func LoadFrom(data interface{}, filename string) error {
 	}
 	defer file.Close()
 	gobber := gob.NewDecoder(file)
-	gobber.Decode(data)
+	err = gobber.Decode(data)
+	if err != nil {
+		return err
+	}
 	return nil
 }

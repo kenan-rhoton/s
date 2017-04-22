@@ -8,6 +8,7 @@ func StartServer() {
 	db, err := UseDatabase("s")
 	if err != nil {
 		fmt.Println(err.Error())
+		return
 	}
 	defer db.Close()
 	stream := Serve(":8090")
@@ -32,7 +33,7 @@ func StartServer() {
 		case request.Action == "get":
 			if request.Message != "" {
 				key, err := db.GetKey(request.Message)
-				if err != nil && err.Error() == "invalid target" {
+				if err != nil {
 					request.FullAnswer("User does not exist", "error")
 				} else {
 					request.Answer(string(key))

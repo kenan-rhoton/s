@@ -28,7 +28,10 @@ func (s *simpleMessage) Answer(msg string) {
 }
 
 func (s *simpleMessage) Close() {
-	s.connHandle.Close()
+	go func(m *simpleMessage) {
+		time.Sleep(time.Second * 1)
+		m.connHandle.Close()
+	}(s)
 }
 
 func handleServeConnection(c net.Conn, out chan simpleMessage) {
