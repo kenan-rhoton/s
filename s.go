@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"os"
 	"time"
+        "strings"
 )
 
 var config struct {
@@ -49,6 +50,36 @@ func main() {
 
 	default:
 		// Default: Send your message to a certain username on the server [comm, (file)] - 5
+		if config.Target == "" {
+			fmt.Println("first <sel> a server")
+			break
+		}
+                if len(os.Args) < 3 {
+                    fmt.Println("s <target> <message>")
+                    break
+                }
+
+                respHandle := SendAction(config.Target, "get", os.Args[1])
+
+                select {
+		case <-time.After(time.Second * 10):
+			fmt.Println("Server did not respond")
+		case answer := <-respHandle:
+                        if answer.Action == "error" {
+			fmt.Println(answer.Action, answer.Message)
+                        break
+                    } else {
+                        key := &rsa.PublicKey{}
+                        UnSerialize(key, answer.Message)
+                        msg := strings.Join(os.Args[2:], " ")
+                        enc, err := Encode(msg, key)
+                        if err != nil {
+                            fmt.Println(err.Error())
+                            break
+                        }
+                        SendAction(config.Target, "send", enc, os.Args[1])
+                    }
+                }
 
 	case os.Args[1] == "srv":
 		// Serve: Act as a server [comm, db, crypt] - 1

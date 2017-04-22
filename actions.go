@@ -30,8 +30,8 @@ func StartServer() {
 				request.FullAnswer("Missing argument", "error")
 			}
 		case request.Action == "get":
-			if len(request.Arguments) > 0 && request.Arguments[0] != "" {
-				key, err := db.GetKey(request.Arguments[0])
+			if request.Message != "" {
+				key, err := db.GetKey(request.Message)
 				if err != nil && err.Error() == "invalid target" {
 					request.FullAnswer("User does not exist", "error")
 				} else {
