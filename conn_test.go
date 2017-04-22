@@ -55,7 +55,6 @@ func TestClientServerResponse(t *testing.T) {
 			t.Errorf("Expected \"%s\" but got \"%s\"", "ping", ret.Message)
 		}
 		ret.Answer("pong")
-		time.Sleep(time.Second * 1)
 		ret.Close()
 	}()
 	handler := SendText("localhost:8090", "ping")
