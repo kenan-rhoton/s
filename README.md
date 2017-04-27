@@ -12,10 +12,15 @@ Then run:
 ## Usage
 
 `s srv` to start a server (for now fixed listening on port 8090)
+
 `s gen` Generate a secure Private/Public key pair in current directory
+
 `s sel <server>` select a server to use as your target
+
 `s reg <alias>` register on the selected server with that alias
+
 `s` ask the server to give you all messages sent to you
+
 `s <user> <message> send a message to a certain user`
 
 ## Limitations
